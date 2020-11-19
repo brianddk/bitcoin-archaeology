@@ -23,10 +23,10 @@ Here's the basic process
 
 ### TODO List
 
-- [ ] Try it under Windows 2000 (requires rsync)
-- [ ] Try it under Vista using Powershell 2.0
-- [ ] Try it under Windows 7 using Powershell 2.0 or 3.0
-- [x] Try it under Windows 2012 using Powershell 3.0
+- [ ] Try it under Windows 2000 (NT50) (requires rsync)
+- [ ] Try it under Vista (NT60) using Powershell 2.0
+- [ ] Try it under Windows 7 (NT61) using Powershell 2.0 or 3.0
+- [x] Try it under Windows 2012 (NT62) using Powershell 3.0
 - [x] Build v0.1.0
 - [x] Build v0.1.3
 - [x] Build v0.1.5
@@ -36,6 +36,12 @@ Here's the basic process
 - [ ] Debug hang on v0.1.0
 - [ ] Debug hang on v0.2.0
 - [ ] Cut binary releases of builds v0.1.0, v0.1.3 etc..
+- [ ] Windows Vista RC2 (Longhorn; NT60) released October0 6, 2006
+- [ ] Find a copy of Windows 7 (NT61) released July 22, 2009
+- [ ] Windows 2012 (NT62) HV released September 4, 2012
+- [ ] Windows 2012 R2 (NT63) HV released October 17, 2013
+- [ ] Windows 2016 (NT100) HV released October 12, 2016
+- [ ] Windows 2019 (NT100) HV released November 13, 2018
 
 ***
 
