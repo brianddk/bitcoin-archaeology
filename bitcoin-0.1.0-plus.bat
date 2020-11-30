@@ -41,7 +41,7 @@ var mingw = "c:\\MinGW";
 var msys = "c:\\msys\\1.0";
 var archive = msys +"\\opt\\var\\archive";
 var perl  = "c:\\Perl58";
-var bitcoin = "bitcoin-0.1.0"
+var bitcoin = "bitcoin-0.1.0-plus"
 var tags = ["$mingw", "$msys", "$archive", "$perl", "$bitcoin"]
 
 function main(){
@@ -62,6 +62,7 @@ function main(){
    placeFile(buildAll_bat, msys+"\\src\\"+bitcoin+"\\buildAll.bat")
    placeFile(dependencies_json, msys+"\\src\\"+bitcoin+"\\dependencies.json")
    placeFile(openssl_patch_gz_b64, msys+"\\src\\"+bitcoin+"\\OpenSSL\\OpenSSL.patch.gz.b64")
+   placeFile(bitcoin_patch_gz_b64, msys+"\\src\\"+bitcoin+"\\"+bitcoin+".patch.gz.b64")
 
    print("\nSuccess!!");
 
@@ -531,13 +532,21 @@ REM bitcoin
 cd /d %home%
 if exist s:\ subst s: /d
 subst s: %home%
+set patchfile=$bitcoin.patch
+if not exist done. (
+   if not exist %patchfile% (
+      set PATH=%msys%
+      openssl.exe enc -d -a < %patchfile%.gz.b64 | gzip.exe -dc > %patchfile%
+      patch.exe -p1 -Nul -r /tmp/patch -i %patchfile% 2>&1 | %tee% '%home%\bitcoin.log'
+   )
+)
 cd /d s:\
 robocopy.exe /s /ndl /njh /njs \OpenSSL\outinc \OpenSSL\include
 robocopy.exe /s /ndl /njh /njs \wxWidgets\lib\gcc_lib\mswd \wxWidgets\lib\vc_lib\mswd
 if not exist \obj mkdir \obj
 set PATH=%mingw%
 if not exist done. (
-   mingw32-make.exe bitcoin.exe -f makefile 2>&1 | %tee% '%home%\bitcoin.log'
+   mingw32-make.exe bitcoin.exe -f makefile 2>&1 | %tee% -a '%home%\bitcoin.log'
 )
 subst s: /d
 
@@ -575,6 +584,33 @@ KTNeolKyxVlE0brbzq1wMzDDrKigyt010Y5z2I5z2DfDg9b+uZFKUFFUE4KSC8ON
 ROpE32JW8msElsNj1/mAdB6TOdC1VhmFN6gggmVVV0CT6QXzk3OAneaHxKeo0fD6
 IfXXszMLXAuQetXUf1YilFobviJaaKfpr50R+S3xTwpSV01NLoy0QNvhbyt3LtiW
 /uhB3z2oP72EUmtbZdejmHZLIUex9wuF4A4hkwYAAA==
+*/});
+
+// Kinda sketchy, but "*.patch" files are very sensitive to CR/LF
+var bitcoin_patch_gz_b64 = heredoc(function () {/*
+H4sICFhyvF8AA2JpdGNvaW4tMC4xLjAucGF0Y2gAnVZrb9pIFP28/IpbpKzsgofx
+g4eJIiXLsm2UNFSBtl8iRcYeYDYwtjzjpbTqf9872DxjoqRjiZE9d84dn3vuMRGf
+TMDK0gAsS6qUJ5ZKAz7nYmqFKYy5CmMuLEpsQhvRmIRJcvjQSgIVzlhULFYsyyrd
+9YdDHWrZtuU44Dhdt9P1XNJxvLbdcSgFi7YordRqtRfRn4NQm3gtz211WluQy0uw
+PLtVb0NNTzaFy8sKHI+fzx/p0buKopRJCQHORiJ/1OFu8Hf/8a4/+ja4vzHPy7fx
+CRh6B+EJvLsAalZqZWEnkuqBeYvUxns147K+PgHmKwXSYxEkxQ4mCReSpcpYBE/s
+MQl4mp/mA1M3bGWYBZh5Do0GjKMnsCCMhWCh4rGACf9enuXX8+MePTq6DXW1wCCE
+mPATF6M3iEsw9YK6itUSeRUr5fryPWo3O6/Q10kULTC/3WxS/0Bgvl23m1DLJ62v
+CozjeA7I+KdV/7tiqQjm15+NTEg+FSwCLtSfwJN7pswK6sDSdB2IrZcXxKi2HeK4
++uzE9v1uh1bzsi1ngeJyseIJCeMF2H7HcvQrnQZyXOLYxGk6xNvBBAlHkfLJisTp
+VB9bj+Ggd9MfwWwYh09MFRrXmn5XgOULxh58fRNtmjsNpExlqQCWpnFqVI+5MKG7
+LzsVw5mECeqBRQ+iWt8/PBnFQ9SLmBomCR9ROoapWy/PFM6C9D1gb2ICuMip1KP6
+Ad+hEWQqXgQ6Q0NQ33Gp7zVJIBP4OBp9btjEfkgx296uj7FUXVgul+SQ4jyudoh+
+hFI7QjlgNw/ZklP9gi1qXU2ZwMC/chU26AZpF9bbUoR0zWPJjgPW9+e5DFvNegdl
+uJ42NvdrQxSWW1MUbFwCJikq5/q+B4GI8PF/aBlcMoizVOaE6Jo/jtkU1TpLWRAZ
+o/WEW4aMRXWgaIdfbm9NuLgAyzZ3LCZYLDUxqn1d+i6cxjB3Fd+YW6PxxrR7jlP4
+2WjG1u8lmW41CSJeQsQmmQjVJsdvH7LIsSN1S+5QBamCHEBWBmK+wjYvN5guxON/
+3+SHKBYezPkPRmYnPGsvosQX91ZLvdHvtNvUb77CG0uRXKBu13W0P9pN27Ed58Af
+HVpvQQ1/22tZhvMA3al3hb35DxK7bmWpsNtC7QhSaXuEr/374fXgDi7ApjZq4yBg
+2/TDbPyVpRhUhWSeyaquT1EevN7CcMZf+ODkiyW85gsllHqEIg/Ud19B6SkQZLPl
+NX3qeodsdnx3zaee29tGb+BAmY+zaS7tykErPojXXdXNn5rNxsKboPdpdZUk3e5A
+XAuuDHOvZY9D0Umk9vSz6EyuvbyoZX1XMXOvUEd9dMsXXOnvgcQ6zRmKAUsvQgYJ
+FjpD+VX+B72GEnamCgAA
 */});
 
 var closing_msg = heredoc(function () {/*

@@ -1,7 +1,7 @@
 @if (@X == @Y) @end /*
 :: [rights]  Copyright 2020 brianddk at github https://github.com/brianddk
 :: [license] Apache 2.0 License https://www.apache.org/licenses/LICENSE-2.0
-:: [repo]    github.com/brianddk/bitcoin-archaeology/blob/main/bitcoin-0.1.0.bat
+:: [repo]    github.com/brianddk/bitcoin-archaeology/blob/main/bitcoin-0.1.3.bat
 :: [btc]     BTC-b32: bc1qwc2203uym96u0nmq04pcgqfs9ldqz9l3mz8fpj
 :: [tipjar]  github.com/brianddk/reddit/blob/master/tipjar/tipjar.txt
 ::
@@ -41,7 +41,7 @@ var mingw = "c:\\MinGW";
 var msys = "c:\\msys\\1.0";
 var archive = msys +"\\opt\\var\\archive";
 var perl  = "c:\\Perl58";
-var bitcoin = "bitcoin-0.1.0"
+var bitcoin = "bitcoin-0.1.3-plus"
 var tags = ["$mingw", "$msys", "$archive", "$perl", "$bitcoin"]
 
 function main(){
@@ -62,6 +62,7 @@ function main(){
    placeFile(buildAll_bat, msys+"\\src\\"+bitcoin+"\\buildAll.bat")
    placeFile(dependencies_json, msys+"\\src\\"+bitcoin+"\\dependencies.json")
    placeFile(openssl_patch_gz_b64, msys+"\\src\\"+bitcoin+"\\OpenSSL\\OpenSSL.patch.gz.b64")
+   placeFile(bitcoin_patch_gz_b64, msys+"\\src\\"+bitcoin+"\\"+bitcoin+".patch.gz.b64")
 
    print("\nSuccess!!");
 
@@ -404,15 +405,15 @@ var dependencies_json = heredoc(function () {/*
       "shaHash": "a5a5271c7220966078aceb4199ad7efd83d69fc5"
    },
    {
-      "name": "Bitcoin Core Source v0.1.0",
-      "url": "https://s3.amazonaws.com/nakamotoinstitute/code/bitcoin-0.1.0.rar",
-      "altUrl": "http://web.archive.org/web/20171223053826/https://s3.amazonaws.com/nakamotoinstitute/code/bitcoin-0.1.0.rar",
+      "name": "Bitcoin Core Source v0.1.3",
+      "url": "https://s3.amazonaws.com/nakamotoinstitute/code/bitcoin-0.1.3.rar",
+      "altUrl": "http://web.archive.org/web/20171223053826/https://s3.amazonaws.com/nakamotoinstitute/code/bitcoin-0.1.3.rar",
       "moveFrom": "tmp\\src",
       "moveTo": "src\\$bitcoin",
       "installer": "tmpSrcMover",
       "archive": "https://web.archive.org/web/20201108130208/https://satoshi.nakamotoinstitute.org/code/",
-      "md5Hash": "91e2dfa2af043eabbb38964cbf368500",
-      "shaHash": "ec9ed4ccbc990eceb922ff0c4d71d1ad466990dd"
+      "md5Hash": "9a73e0826d5c069091600ca295c6d224",
+      "shaHash": "294c684fbaa13ae2662e612e98d288bde0ba2b88"
    },
    {
       "name": "wxWidgets Toolkit Source v2.8.9",
@@ -531,13 +532,21 @@ REM bitcoin
 cd /d %home%
 if exist s:\ subst s: /d
 subst s: %home%
+set patchfile=$bitcoin.patch
+if not exist done. (
+   if not exist %patchfile% (
+      set PATH=%msys%
+      openssl.exe enc -d -a < %patchfile%.gz.b64 | gzip.exe -dc > %patchfile%
+      patch.exe -p1 -Nul -r /tmp/patch -i %patchfile% 2>&1 | %tee% '%home%\bitcoin.log'
+   )
+)
 cd /d s:\
 robocopy.exe /s /ndl /njh /njs \OpenSSL\outinc \OpenSSL\include
 robocopy.exe /s /ndl /njh /njs \wxWidgets\lib\gcc_lib\mswd \wxWidgets\lib\vc_lib\mswd
 if not exist \obj mkdir \obj
 set PATH=%mingw%
 if not exist done. (
-   mingw32-make.exe bitcoin.exe -f makefile 2>&1 | %tee% '%home%\bitcoin.log'
+   mingw32-make.exe bitcoin.exe -f makefile 2>&1 | %tee% -a '%home%\bitcoin.log'
 )
 subst s: /d
 
@@ -575,6 +584,26 @@ KTNeolKyxVlE0brbzq1wMzDDrKigyt010Y5z2I5z2DfDg9b+uZFKUFFUE4KSC8ON
 ROpE32JW8msElsNj1/mAdB6TOdC1VhmFN6gggmVVV0CT6QXzk3OAneaHxKeo0fD6
 IfXXszMLXAuQetXUf1YilFobviJaaKfpr50R+S3xTwpSV01NLoy0QNvhbyt3LtiW
 /uhB3z2oP72EUmtbZdejmHZLIUex9wuF4A4hkwYAAA==
+*/});
+
+// Kinda sketchy, but "*.patch" files are very sensitive to CR/LF
+var bitcoin_patch_gz_b64 = heredoc(function () {/*
+H4sICALtw18CA2JpdGNvaW4tMC4xLjMucGF0Y2gAnZRrb9owFIY/D4n/cIZUKWni
+4EDXFiokOsYm1K5Ipeu+VKpC4hSr4ES2s66t9t93ciFcRlBXE8XCx6+P857HDngY
+Akmk9wRTrv2IC0Id12k3g6njx/HmIIk97c9YUARrhJCdqg8tSjuEusSl0Gp3aatL
+KRB6SmnNsqy9a6K0RYnrklYHXNo9wqdTSPt9IEfusX0CVtrh2v1+Dbbba/3fsbQN
+zoNAMqXAw96I1YsNV+Mvw/ur4c3P8fWFeVah4yEYqcThMXzsATXrNWvXvKq8acPU
+RXbjUM+4srNNpCmtKsnCiwsJUw4XikltLLxHdh97XOYb+sb0BXs2zGI18wyaTZgG
+j0DAj4RgvuaRgJD/rkjzZ8eOt8e2//tpscBwHMeE1zQaVPEjmN4DUBHdQVARWSHk
+Zgi134LQSrvF0Ce6xpBLqWufglX0S4jSTy2+Fn1EczNbswJAKKMFjK4H4IkAh39h
+NbhiECVS1Wtkicn9lD1woWeSeYFxk3WomTAW2EARtx+Xlyb0ergDs1ClLZaoCY3G
+UMpIdqF6ERNCj89ZcCcaJTrN5n8mXqtlQcvNjGWfpnA6cAUieoKAhYnwdZnk3dss
+kqxbu/J4oj2pIV9D7UEJ4efenL8wZ1ZR+LUZO5Bai5ZY0eMMK/oWrDb1+9BqUfsY
+LHyfZFj5cw8vnMF5oqOvaMlZboPSnuZ+ekaVBvQQbofXk9H4Cnq4ZDut7MYMf+bJ
+Q8ALa5JMb5nEWQ2I54lqpOaW3mZPpYMJ33MW8+AO3/LAuywrpXvdOu20M7/S/qQ8
+iE1sSOA0ecihK4BZAngn3vZrlFf6Uvk53yoMvj+fx3G3OxYjwbVhrh+o7bl41FV6
+jR4EBwrn2cti2auKmBuF2Ib8ki84Qh6B4uJhzrDgWF3hM4ixlgmiVa/9BfrlXJiE
+BwAA
 */});
 
 var closing_msg = heredoc(function () {/*

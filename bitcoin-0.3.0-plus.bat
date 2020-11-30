@@ -1,7 +1,7 @@
 @if (@X == @Y) @end /*
 :: [rights]  Copyright 2020 brianddk at github https://github.com/brianddk
 :: [license] Apache 2.0 License https://www.apache.org/licenses/LICENSE-2.0
-:: [repo]    github.com/brianddk/bitcoin-archaeology/blob/main/bitcoin-0.1.0.bat
+:: [repo]    github.com/brianddk/bitcoin-archaeology/blob/main/bitcoin-0.3.0.bat
 :: [btc]     BTC-b32: bc1qwc2203uym96u0nmq04pcgqfs9ldqz9l3mz8fpj
 :: [tipjar]  github.com/brianddk/reddit/blob/master/tipjar/tipjar.txt
 ::
@@ -41,8 +41,9 @@ var mingw = "c:\\MinGW";
 var msys = "c:\\msys\\1.0";
 var archive = msys +"\\opt\\var\\archive";
 var perl  = "c:\\Perl58";
-var bitcoin = "bitcoin-0.1.0"
-var tags = ["$mingw", "$msys", "$archive", "$perl", "$bitcoin"]
+var bitcoin = "bitcoin-0.3.0-plus"
+var bitshort = "bitcoin-0.3.0"
+var tags = ["$mingw", "$msys", "$archive", "$perl", "$bitcoin", "$bitshort"]
 
 function main(){
    mkDirs([mingw]);
@@ -62,6 +63,7 @@ function main(){
    placeFile(buildAll_bat, msys+"\\src\\"+bitcoin+"\\buildAll.bat")
    placeFile(dependencies_json, msys+"\\src\\"+bitcoin+"\\dependencies.json")
    placeFile(openssl_patch_gz_b64, msys+"\\src\\"+bitcoin+"\\OpenSSL\\OpenSSL.patch.gz.b64")
+   placeFile(bitcoin_patch_gz_b64, msys+"\\src\\"+bitcoin+"\\"+bitcoin+".patch.gz.b64")
 
    print("\nSuccess!!");
 
@@ -404,37 +406,37 @@ var dependencies_json = heredoc(function () {/*
       "shaHash": "a5a5271c7220966078aceb4199ad7efd83d69fc5"
    },
    {
-      "name": "Bitcoin Core Source v0.1.0",
-      "url": "https://s3.amazonaws.com/nakamotoinstitute/code/bitcoin-0.1.0.rar",
-      "altUrl": "http://web.archive.org/web/20171223053826/https://s3.amazonaws.com/nakamotoinstitute/code/bitcoin-0.1.0.rar",
-      "moveFrom": "tmp\\src",
+      "name": "Bitcoin Core Source v0.3.0",
+      "url": "https://github.com//bitcoin/bitcoin/archive/v0.3.0.zip",
+      "altUrl": "http://web.archive.org/web/20201120164618/https://codeload.github.com/bitcoin/bitcoin/zip/v0.3.0",
+      "moveFrom": "tmp\\$bitshort",
       "moveTo": "src\\$bitcoin",
       "installer": "tmpSrcMover",
-      "archive": "https://web.archive.org/web/20201108130208/https://satoshi.nakamotoinstitute.org/code/",
-      "md5Hash": "91e2dfa2af043eabbb38964cbf368500",
-      "shaHash": "ec9ed4ccbc990eceb922ff0c4d71d1ad466990dd"
+      "archive": "http://web.archive.org/web/20201120164608/https://github.com/bitcoin/bitcoin/releases/tag/v0.3.0",
+      "md5Hash": "8768ff29ae4ff59366c957e0a9cb512d",
+      "shaHash": "48517363d65239576035f24b8efd4df287b284de"
    },
    {
-      "name": "wxWidgets Toolkit Source v2.8.9",
-      "url": "https://downloads.sourceforge.net/wxwindows/wxWidgets-2.8.9.zip",
-      "altUrl": "http://web.archive.org/web/20201119081141/https://master.dl.sourceforge.net/project/wxwindows/2.8.9/wxWidgets-2.8.9.zip",
-      "moveFrom": "tmp\\wxWidgets-2.8.9",
+      "name": "wxWidgets Toolkit Source v2.9.0",
+      "url": "https://downloads.sourceforge.net/wxwindows/wxWidgets-2.9.0.zip",
+      "altUrl": "http://web.archive.org/web/20201120175705/https://master.dl.sourceforge.net/project/wxwindows/2.9.0/wxWidgets-2.9.0.zip",
+      "moveFrom": "tmp\\wxWidgets-2.9.0",
       "moveTo": "src\\$bitcoin\\wxWidgets",
       "installer": "tmpSrcMover",
-      "archive": "https://web.archive.org/web/20180617195338/https://sourceforge.net/projects/wxwindows/files/2.8.9/",
-      "md5Hash": "faabfaa824915401e709d26a1432b7f7",
-      "shaHash": "2f9b4d63e467375c0c699981522de43f3476abb6"
+      "archive": "https://web.archive.org/web/20180617195345/https://sourceforge.net/projects/wxwindows/files/2.9.0/",
+      "md5Hash": "9f47db171d4f87fc832e90c6551c1b13",
+      "shaHash": "79246c26e9da40a23272f2a0331fa71ce3b9e835"
    },
    {
-      "name": "OpenSSL Source v0.9.8h",
-      "url": "https://github.com/openssl/openssl/archive/OpenSSL_0_9_8h.zip",
-      "altUrl": "http://web.archive.org/web/20201118042952/https://codeload.github.com/openssl/openssl/zip/OpenSSL_0_9_8h",
-      "moveFrom": "tmp\\openssl-OpenSSL_0_9_8h",
+      "name": "OpenSSL Source v0.9.8k",
+      "url": "https://github.com/openssl/openssl/archive/OpenSSL_0_9_8k.zip",
+      "altUrl": "http://web.archive.org/web/20201120113258/https://codeload.github.com/openssl/openssl/zip/OpenSSL_0_9_8k",
+      "moveFrom": "tmp\\openssl-OpenSSL_0_9_8k",
       "moveTo": "src\\$bitcoin\\OpenSSL",
       "installer": "tmpSrcMover",
-      "archive": "https://web.archive.org/web/20201118042952/https://codeload.github.com/openssl/openssl/zip/OpenSSL_0_9_8h",
-      "md5Hash": "368d680fe87f395f9d161a45d6248f4d",
-      "shaHash": "bdbfd85b664f28254390349cae0050eaf65a9ae0"
+      "archive": "https://web.archive.org/web/20201120113226/https://github.com/openssl/openssl/releases/tag/OpenSSL_0_9_8k",
+      "md5Hash": "c42b32833c942aca0a76fed97cb7659e",
+      "shaHash": "b7597ba852cd022fafc4c66f5e6f4cb126ad41d8"
    },
    {
       "name": "Berkely DB Source v4.7.25",
@@ -448,15 +450,15 @@ var dependencies_json = heredoc(function () {/*
       "shaHash": "d3bba11b3a1f86f3ea5a82dda73ca0dd2526d8e0"
    },
    {
-      "name": "Boost Toolkit Source v1.34.1",
-      "url": "https://downloads.sourceforge.net/boost/boost_1_34_1.zip",
-      "altUrl": "http://web.archive.org/web/20201118044413/https://master.dl.sourceforge.net/project/boost/boost/1.34.1/boost_1_34_1.zip",
-      "moveFrom": "tmp\\boost_1_34_1",
+      "name": "Boost Toolkit Source v1.42.0",
+      "url": "https://downloads.sourceforge.net/boost/boost_1_42_0.zip",
+      "altUrl": "http://web.archive.org/web/20201120172928/https://versaweb.dl.sourceforge.net/project/boost/boost/1.42.0/boost_1_42_0.zip",
+      "moveFrom": "tmp\\boost_1_42_0",
       "moveTo": "src\\$bitcoin\\boost",
       "installer": "tmpSrcMover",
-      "archive": "https://web.archive.org/web/20161201185548/https://sourceforge.net/projects/boost/files/boost/1.34.1/",
-      "md5Hash": "759a753cb4cdb1ec68c211d3b9d971b0",
-      "shaHash": "90a10d2e3591fcaa2b8cd10121980133af3eb2ff"
+      "archive": "https://web.archive.org/web/20161201185707/https://sourceforge.net/projects/boost/files/boost/1.42.0/",
+      "md5Hash": "ceb78ed309c867e49dc29f60be841b64",
+      "shaHash": "aeb7f54aea5f2d9e19db26afb4da1a7b584eb1d0"
    },
    {
       "name": "Boost Jam Build Utility v3.1.17",
@@ -531,13 +533,22 @@ REM bitcoin
 cd /d %home%
 if exist s:\ subst s: /d
 subst s: %home%
+set patchfile=$bitcoin.patch
+if not exist done. (
+   if not exist %patchfile% (
+      set PATH=%msys%
+      openssl.exe enc -d -a < %patchfile%.gz.b64 | gzip.exe -dc > %patchfile%
+      patch.exe -p1 -Nul -r /tmp/patch -i %patchfile% 2>&1 | %tee% '%home%\bitcoin.log'
+   )
+)
 cd /d s:\
 robocopy.exe /s /ndl /njh /njs \OpenSSL\outinc \OpenSSL\include
 robocopy.exe /s /ndl /njh /njs \wxWidgets\lib\gcc_lib\mswd \wxWidgets\lib\vc_lib\mswd
 if not exist \obj mkdir \obj
+if not exist \obj\nogui mkdir \obj\nogui
 set PATH=%mingw%
 if not exist done. (
-   mingw32-make.exe bitcoin.exe -f makefile 2>&1 | %tee% '%home%\bitcoin.log'
+   mingw32-make.exe bitcoin.exe bitcoind.exe -f makefile.mingw 2>&1 | %tee% -a '%home%\bitcoin.log'
 )
 subst s: /d
 
@@ -545,6 +556,7 @@ REM Prepare Distribution
 cd /d %home%
 if not exist dist mkdir dist
 strip "bitcoin.exe" -o "dist\bitcoin.exe"
+strip "bitcoind.exe" -o "dist\bitcoind.exe"
 strip "OpenSSL\libeay32.dll" -o "dist\libeay32.dll"
 strip "$mingw\bin\mingwm10.dll" -o "dist\mingwm10.dll"
 echo. > done.
@@ -561,20 +573,34 @@ endlocal
 
 // Kinda sketchy, but "*.patch" files are very sensitive to CR/LF
 var openssl_patch_gz_b64 = heredoc(function () {/*
-H4sICEvkwl8CA29wZW5zc2wtT3BlblNTTF8wXzlfOGgucGF0Y2gApVRtb5swEP5c
-fsVJE9Im5gRI09BomrKXqvvQlynVtI/IwUewakxkQ6Oq6n/fGei6tEm6rUj4zN1z
-L9xztpB5DqwxfA3VCrW1il2SvLo6S8P0OE2KYWZuV3U1RGPcm3KlBtkOLFvxOitQ
-bPXxGGP/kuMgDsOEhWMWJxCG09FkGh0CCydh6AVB8D8VUMQ4ZFHkIkbj6XgyDY8o
-YkIRZzNgx8n7IwhoncBs5sEbqTPVCIQPfaphVtpB8ZEsqIXMPfCCm0oKOJnPU1Vx
-kc6vPqW2NlIv7VtneQd3cO/BJqgrbBPnwcGdS5hrgTlcfj+5cH90cZmSlydeZAj1
-Umq0Q0yX5eplcp7A9/HyBPo6Sp4H28dGMiYeAlqPd7HRNrIj5Jlx0eQ5mh3GrhBn
-DLb0nFjc5mQs7zx68rfk1G2+rUR++/kXPJZ2WNJQrEfxYMHrl9q5id7H4ibydSQ+
-i7WPw8hRGPXnaWawhD4qrGVdwHkXKDi9+AHc9gi2+6HeshUaBV8qnctlYxDaWsCP
-wI/BH4F/CP4Y/CPwJ+AnXrAVXRcGubCgK2ayuBOHnRg7IQVyJwW2mEXu1ozb2kne
-KTNeolKyxVlE0brbzq1wMzDDrKigyt010Y5z2I5z2DfDg9b+uZFKUFFUE4KSC8ON
-ROpE32JW8msElsNj1/mAdB6TOdC1VhmFN6gggmVVV0CT6QXzk3OAneaHxKeo0fD6
-IfXXszMLXAuQetXUf1YilFobviJaaKfpr50R+S3xTwpSV01NLoy0QNvhbyt3LtiW
-/uhB3z2oP72EUmtbZdejmHZLIUex9wuF4A4hkwYAAA==
+H4sICK8jxF8CA29wZW5zc2wtT3BlblNTTF8wXzlfOGsucGF0Y2gAtVTbbptAEH0u
+XzFSxBNdG7CJL6oq9xKllRynilVFfbLW7GCvsl7QLtTK33cWSOMkdmqrLQ87MHPm
+zDBnQMgsA1YZvoW8QG2tYtdk5/PpIlyMFsO7LuqV1Gi7uEh5ITvpARwreJmuUbzA
+e4yxY7nfxGE4YmGPxQmEyTgcjqMEWDgIQy8IglMrE1scsihi8Qii/rg3GvcjYhsS
+22QCLDl/O4CAzhFMJh6cSZ2qSiC8s6WRetVZv991trW7qbkvyvxAcFllGRoXDM5k
+pgVmcP3tYuZ6nV0vbuYf9iUZy5sM1EJme2l1Xc+Fsl3O+Y/54vbrrBd74gQZV5vi
+FBVr+HEi1tB/peED2XMJ4x0Jh4mTkM7nEp6o1p5g08h/lfI56ZfbI3Tc2O6GtnPb
+iztLXv5pnE/Rr6n4FPl3Ir7gek3DyEnoDqfgxOAGWlbYynINVw1RcDn7Dty2CHb4
+otmyAo2CT7nO5KoyCHUv4Efgx+D3wO+Dn4B/Dv4A/KEX7EWXa4NcWNA5M2ncmH5j
+EmekQO6swBqzzNyZcls6yxtnyjeolKxxFlHU6bZJW7sdmGC6ziHPaFOadQ7rdQ7b
+YXhQxz9WUglqinpCUHJpuJFIk2hHzDb8DoFl8Dh13iGfx2QGaExuFP5EBRGs8jIH
+2kwvuLm4AjgYfih8iRoNLx9Kf55OLXAtQOqiKnc7EUptDS9IFrrT9NYuiPye9CcH
+ufOqpBRGXqDb7u8odylYt/6YQc8tqP16CaW2Nk/verQ3aiUk/fB+ASfAlUi4BgAA
+*/});
+
+// Kinda sketchy, but "*.patch" files are very sensitive to CR/LF
+var bitcoin_patch_gz_b64 = heredoc(function () {/*
+H4sICFddxF8CA2JpdGNvaW4tMC4zLjAucGF0Y2gAnVJha9swEP08Q/7D1Z+S2Upk
+m7WpSyEjdFuhdFB3/VQoinTGop5sJLmF/vpJdlpiSNrRw9bZ0ns66d0TsiyBdJo9
+w0Za3khF6Dyb04VCO+dtO54lLbO8QvG6GhBC9vO+pDShhJ4QmkGa5cm3nB6D+6c0
+iKLo/V0dN6UkSUh6Cskyz2ienDru0nFXKyBJRo/jJUTbvFoF4GOxmAQwef2Gn2iB
+CaHRGDRQ6uYvXN6sgSnhpp9QW2kQmk6bSUA8RZYwPVprZBZvK5fEdEiOVCCKGK7/
+XF3NZlu0j1ZLZctpeKF1o3M4zJ1ByWSN4l6Fs7NJEA0n/M+CsCfc9TbiEW4r7O9k
+HBykAdU8g8CyU9y+Vfn8QbdVRqIW6OVzr0aO8gkHXU3DH9GaGBjn2FrgjVLIrWyU
+2VJb25d5sFANBYue8sttVaOG831nGkEGNWKwukOvoThkW4Naslq+4Lw6YLIdxB77
+7qx+ysJj/sjGSU53bZzS+ASifvQW5jUzBtbfO9v8cD04G3Q3llnJvaLGgusi3F3c
+FJe/r51kGaUOREYIXjH9FVrzUnSbu17YMPSO+wgEbd2Z0Lf8reP98w/lvnKCHgQA
+AA==
 */});
 
 var closing_msg = heredoc(function () {/*

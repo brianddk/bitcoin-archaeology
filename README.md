@@ -24,6 +24,7 @@ Here's the basic process
 ### TODO List
 
 - [ ] Try it under Windows 2000 (NT50) (requires rsync)
+- [ ] Try it under XP (NT51)
 - [ ] Try it under Vista (NT60) using Powershell 2.0
 - [ ] Try it under Windows 7 (NT61) using Powershell 2.0 or 3.0
 - [x] Try it under Windows 2012 (NT62) using Powershell 3.0
@@ -42,6 +43,65 @@ Here's the basic process
 - [ ] Windows 2012 R2 (NT63) HV released October 17, 2013
 - [ ] Windows 2016 (NT100) HV released October 12, 2016
 - [ ] Windows 2019 (NT100) HV released November 13, 2018
+
+***
+
+### Version build list
+
+- [x] 0.1.0      Jan 10, 2009
+- [ ] 0.1.2
+- [x] 0.1.3      Jan 12, 2009
+- [x] 0.1.5      Feb 04, 2009
+- [ ] 0.1.5_plus
+- [x] 0.2.0      Dec 13, 2009
+- [x] 0.3.0      Jul 04, 2010
+- [ ] 0.3.1
+- [ ] 0.3.2
+- [ ] 0.3.3
+- [ ] 0.3.6
+- [ ] 0.3.7
+- [ ] 0.3.8
+- [ ] 0.3.10
+- [ ] 0.3.11
+- [ ] 0.3.12
+- [ ] 0.3.13
+- [ ] 0.3.14
+- [ ] 0.3.15
+- [ ] 0.3.17
+- [ ] 0.3.18
+- [ ] 0.3.19
+- [ ] 0.3.20 Feb 18, 2011 Code transitioned to github
+- [ ] 0.3.21
+- [ ] 0.3.22
+- [ ] 0.3.23
+- [ ] 0.3.24
+- [ ] 0.4.0
+- [ ] 0.4.1
+- [ ] 0.5.0
+- [ ] 0.5.1
+- [ ] 0.5.2
+- [ ] 0.5.3
+- [ ] 0.5.4
+- [ ] 0.5.7
+- [ ] 0.6.0
+- [ ] 0.6.1
+- [ ] 0.6.2 (archive)
+- [ ] 0.6.3
+- [ ] 0.7.0
+- [ ] 0.7.1
+- [ ] 0.7.2 (archive)
+- [ ] 0.8.0 (archive)
+- [ ] 0.8.1 (archive)
+- [ ] 0.8.2
+- [ ] 0.8.3
+- [ ] 0.8.4
+- [ ] 0.8.5
+- [ ] 0.8.6 (live)
+- [ ] 0.9.0 (live)
+
+
+
+
 
 ***
 

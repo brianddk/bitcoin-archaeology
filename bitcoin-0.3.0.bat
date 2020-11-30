@@ -1,7 +1,7 @@
 @if (@X == @Y) @end /*
 :: [rights]  Copyright 2020 brianddk at github https://github.com/brianddk
 :: [license] Apache 2.0 License https://www.apache.org/licenses/LICENSE-2.0
-:: [repo]    github.com/brianddk/bitcoin-archaeology/blob/main/bitcoin-0.1.0.bat
+:: [repo]    github.com/brianddk/bitcoin-archaeology/blob/main/bitcoin-0.3.0.bat
 :: [btc]     BTC-b32: bc1qwc2203uym96u0nmq04pcgqfs9ldqz9l3mz8fpj
 :: [tipjar]  github.com/brianddk/reddit/blob/master/tipjar/tipjar.txt
 ::
@@ -41,7 +41,7 @@ var mingw = "c:\\MinGW";
 var msys = "c:\\msys\\1.0";
 var archive = msys +"\\opt\\var\\archive";
 var perl  = "c:\\Perl58";
-var bitcoin = "bitcoin-0.1.0"
+var bitcoin = "bitcoin-0.3.0"
 var tags = ["$mingw", "$msys", "$archive", "$perl", "$bitcoin"]
 
 function main(){
@@ -61,7 +61,7 @@ function main(){
    print("");
    placeFile(buildAll_bat, msys+"\\src\\"+bitcoin+"\\buildAll.bat")
    placeFile(dependencies_json, msys+"\\src\\"+bitcoin+"\\dependencies.json")
-   placeFile(openssl_patch_gz_b64, msys+"\\src\\"+bitcoin+"\\OpenSSL\\OpenSSL.patch.gz.b64")
+   placeFile(openssl_patch, msys+"\\src\\"+bitcoin+"\\OpenSSL\\OpenSSL.patch")
 
    print("\nSuccess!!");
 
@@ -91,7 +91,7 @@ function msiInstall(node){
          if(gco.oExec.ExitCode == 0) {return moveToArch(file);}
       }
    }
-   return false;
+   return error("  Failed to install "+file);
 }
 
 function mingwUnzip(node) {
@@ -111,14 +111,14 @@ function mingwUnzip(node) {
                   fso.DeleteFile(tar);
                }
                else {
-                  return false;
+                  return error("  Failed to untar "+file);
                }
             }
             return moveToArch(file);
          }
       }
    }
-   return false;
+   return error("  Failed to untar "+file);
 }
 
 function msysStaging(node) {
@@ -151,7 +151,7 @@ function perlInstaller(node) {
          return moveToArch(file);
       }
    }
-   return false;
+   return error("  Failed to install "+file);
 }
 
 function tmpSrcMover(node) {
@@ -169,15 +169,14 @@ function tmpSrcMover(node) {
          return moveToArch(file);
       }
    }
-   return false;
+   return error("  Failed to place: "+file);
 }
 
 function unzip(file, dest) {
    cmd = "7z.exe x -r -bd -y -aoa -o"+dest+" "+file;
    gco = getCmdOut(cmd);
    if(gco.oExec.ExitCode){
-      print(gco.error)
-      return false;
+      return error("  Failed to untar "+file+"with the message:\n"+gco.error);
    }
    return true;
 }
@@ -197,7 +196,8 @@ function moveToArch(file) {
    else {
       fso.MoveFile(file, dest);
    }
-   return true;
+   if(fso.FileExists(dest)) {return true;}
+   else {return error("  Failed to move file: "+file);}
 }
 
 function mkDirs(dirs) {
@@ -211,11 +211,49 @@ function mkDirs(dirs) {
 
 function hashCheck(node) {
    var file = getFile(node);
-   if(fso.FileExists(file)) {
-      output = getCmdOut("certutil -hashfile "+file).output;
-      var hash = output.split("\n")[1].replace(/\r/g,"").replace(/ /g, "");
+   if(!fso.FileExists(file)) {
+      if(!downloadFile(node)) {
+         return false;
+      }
    }
-   return (hash == node.shaHash)
+   output = getCmdOut("certutil -hashfile "+file).output;
+   var hash = output.split("\n")[1].replace(/\r/g,"").replace(/ /g, "");
+   if(hash != node.shaHash) {
+      return error("  Failed!! Checksum mismatch on file: "+file);
+   }
+   return true;
+}
+
+function downloadFile(node) {
+   var file = getFile(node);
+   var url = node['altUrl'];
+   var data = null;
+   try
+   {
+      // print("open");
+      var temp = req.Open("GET", url, false);
+      // print("set header");
+      req.SetRequestHeader("User-Agent", "curl/7.55.1");
+      req.SetRequestHeader("Accept", "*/*");
+      print("  Downloading "+file);
+      req.Send();
+      data = req.ResponseBody;
+   }
+   catch (objError)
+   {
+      data = null;
+   }
+   if(data != null) {
+      ios.Type = adTypeBinary;
+      ios.Open();
+      ios.Write(data);
+      ios.SaveToFile(file, adSaveCreateOverWrite);
+      ios.Close();
+      return true;
+   }
+   else {
+      return error("  Failed!! Could not download "+file);
+   }
 }
 
 function getCmdOut(cmd) {
@@ -404,37 +442,37 @@ var dependencies_json = heredoc(function () {/*
       "shaHash": "a5a5271c7220966078aceb4199ad7efd83d69fc5"
    },
    {
-      "name": "Bitcoin Core Source v0.1.0",
-      "url": "https://s3.amazonaws.com/nakamotoinstitute/code/bitcoin-0.1.0.rar",
-      "altUrl": "http://web.archive.org/web/20171223053826/https://s3.amazonaws.com/nakamotoinstitute/code/bitcoin-0.1.0.rar",
-      "moveFrom": "tmp\\src",
+      "name": "Bitcoin Core Source v0.3.0",
+      "url": "https://github.com//bitcoin/bitcoin/archive/v0.3.0.zip",
+      "altUrl": "http://web.archive.org/web/20201120164618/https://codeload.github.com/bitcoin/bitcoin/zip/v0.3.0",
+      "moveFrom": "tmp\\$bitcoin",
       "moveTo": "src\\$bitcoin",
       "installer": "tmpSrcMover",
-      "archive": "https://web.archive.org/web/20201108130208/https://satoshi.nakamotoinstitute.org/code/",
-      "md5Hash": "91e2dfa2af043eabbb38964cbf368500",
-      "shaHash": "ec9ed4ccbc990eceb922ff0c4d71d1ad466990dd"
+      "archive": "http://web.archive.org/web/20201120164608/https://github.com/bitcoin/bitcoin/releases/tag/v0.3.0",
+      "md5Hash": "8768ff29ae4ff59366c957e0a9cb512d",
+      "shaHash": "48517363d65239576035f24b8efd4df287b284de"
    },
    {
-      "name": "wxWidgets Toolkit Source v2.8.9",
-      "url": "https://downloads.sourceforge.net/wxwindows/wxWidgets-2.8.9.zip",
-      "altUrl": "http://web.archive.org/web/20201119081141/https://master.dl.sourceforge.net/project/wxwindows/2.8.9/wxWidgets-2.8.9.zip",
-      "moveFrom": "tmp\\wxWidgets-2.8.9",
+      "name": "wxWidgets Toolkit Source v2.9.0",
+      "url": "https://downloads.sourceforge.net/wxwindows/wxWidgets-2.9.0.zip",
+      "altUrl": "http://web.archive.org/web/20201120175705/https://master.dl.sourceforge.net/project/wxwindows/2.9.0/wxWidgets-2.9.0.zip",
+      "moveFrom": "tmp\\wxWidgets-2.9.0",
       "moveTo": "src\\$bitcoin\\wxWidgets",
       "installer": "tmpSrcMover",
-      "archive": "https://web.archive.org/web/20180617195338/https://sourceforge.net/projects/wxwindows/files/2.8.9/",
-      "md5Hash": "faabfaa824915401e709d26a1432b7f7",
-      "shaHash": "2f9b4d63e467375c0c699981522de43f3476abb6"
+      "archive": "https://web.archive.org/web/20180617195345/https://sourceforge.net/projects/wxwindows/files/2.9.0/",
+      "md5Hash": "9f47db171d4f87fc832e90c6551c1b13",
+      "shaHash": "79246c26e9da40a23272f2a0331fa71ce3b9e835"
    },
    {
-      "name": "OpenSSL Source v0.9.8h",
-      "url": "https://github.com/openssl/openssl/archive/OpenSSL_0_9_8h.zip",
-      "altUrl": "http://web.archive.org/web/20201118042952/https://codeload.github.com/openssl/openssl/zip/OpenSSL_0_9_8h",
-      "moveFrom": "tmp\\openssl-OpenSSL_0_9_8h",
+      "name": "OpenSSL Source v0.9.8k",
+      "url": "https://github.com/openssl/openssl/archive/OpenSSL_0_9_8k.zip",
+      "altUrl": "http://web.archive.org/web/20201120113258/https://codeload.github.com/openssl/openssl/zip/OpenSSL_0_9_8k",
+      "moveFrom": "tmp\\openssl-OpenSSL_0_9_8k",
       "moveTo": "src\\$bitcoin\\OpenSSL",
       "installer": "tmpSrcMover",
-      "archive": "https://web.archive.org/web/20201118042952/https://codeload.github.com/openssl/openssl/zip/OpenSSL_0_9_8h",
-      "md5Hash": "368d680fe87f395f9d161a45d6248f4d",
-      "shaHash": "bdbfd85b664f28254390349cae0050eaf65a9ae0"
+      "archive": "https://web.archive.org/web/20201120113226/https://github.com/openssl/openssl/releases/tag/OpenSSL_0_9_8k",
+      "md5Hash": "c42b32833c942aca0a76fed97cb7659e",
+      "shaHash": "b7597ba852cd022fafc4c66f5e6f4cb126ad41d8"
    },
    {
       "name": "Berkely DB Source v4.7.25",
@@ -448,15 +486,15 @@ var dependencies_json = heredoc(function () {/*
       "shaHash": "d3bba11b3a1f86f3ea5a82dda73ca0dd2526d8e0"
    },
    {
-      "name": "Boost Toolkit Source v1.34.1",
-      "url": "https://downloads.sourceforge.net/boost/boost_1_34_1.zip",
-      "altUrl": "http://web.archive.org/web/20201118044413/https://master.dl.sourceforge.net/project/boost/boost/1.34.1/boost_1_34_1.zip",
-      "moveFrom": "tmp\\boost_1_34_1",
+      "name": "Boost Toolkit Source v1.42.0",
+      "url": "https://downloads.sourceforge.net/boost/boost_1_42_0.zip",
+      "altUrl": "http://web.archive.org/web/20201120172928/https://versaweb.dl.sourceforge.net/project/boost/boost/1.42.0/boost_1_42_0.zip",
+      "moveFrom": "tmp\\boost_1_42_0",
       "moveTo": "src\\$bitcoin\\boost",
       "installer": "tmpSrcMover",
-      "archive": "https://web.archive.org/web/20161201185548/https://sourceforge.net/projects/boost/files/boost/1.34.1/",
-      "md5Hash": "759a753cb4cdb1ec68c211d3b9d971b0",
-      "shaHash": "90a10d2e3591fcaa2b8cd10121980133af3eb2ff"
+      "archive": "https://web.archive.org/web/20161201185707/https://sourceforge.net/projects/boost/files/boost/1.42.0/",
+      "md5Hash": "ceb78ed309c867e49dc29f60be841b64",
+      "shaHash": "aeb7f54aea5f2d9e19db26afb4da1a7b584eb1d0"
    },
    {
       "name": "Boost Jam Build Utility v3.1.17",
@@ -478,67 +516,39 @@ set oldpath=%path%
 set mingw=$mingw\mingw32\bin;$mingw\bin;$perl\bin;%path%
 set msys=$mingw\mingw32\bin;$mingw\bin;$msys\bin;%path%
 set home=$msys\src\$bitcoin
-set tee=$msys\bin\tee.exe
-
-REM Verify patch / diff
-REM The diff and patch utilities "change" over time, and are very picky
-set PATH=%msys%
-diff.exe -v | findstr /r "^diff (GNU diffutils) 2\.8\.7$" || goto :error
-patch.exe --version | findstr /r "^patch 2\.5\.4$" || goto :error
 
 REM OpenSSL
-cd /d %home%\OpenSSL
-set patchfile=OpenSSL.patch
-set PATH=%msys%
-if not exist done. (
-   if not exist %patchfile% (
-      openssl.exe enc -d -a < %patchfile%.gz.b64 | gzip.exe -dc > %patchfile%
-      patch.exe -p1 -Nul -r /tmp/patch -i %patchfile% 2>&1 | %tee% '%home%\OpenSSL.log'
-   )
-)
 set PATH=%mingw%
-if not exist done. (
-   call ms\mingw32.bat 2>&1 | %tee% -a '%home%\OpenSSL.log'
-)
-echo. > done.
+cd /d %home%\OpenSSL
+if exist OpenSSL.patch $msys\bin\patch.exe -p0 -Nl -r /tmp/OpenSSL -i "%cd%\OpenSSL.patch" -d .. 2>&1 | $msys\bin\tee.exe '%home%\OpenSSL.log'
+call ms\mingw32.bat 2>&1 | $msys\bin\tee.exe -a '%home%\OpenSSL.log'
 
 REM Berkeley DB
-cd /d %home%\DB\build_unix
 set PATH=%msys%
-if not exist done. (
-   sh.exe --login -c "cd '%cd%';../dist/configure --enable-mingw --enable-cxx" 2>&1 | %tee% '%home%\DB.log'
-   make.exe 2>&1 | %tee% -a '%home%\DB.log'
-)
-echo. > done.
+cd /d %home%\DB\build_unix
+sh.exe --login -c "cd '%cd%';../dist/configure --enable-mingw --enable-cxx" 2>&1 | $msys\bin\tee.exe '%home%\DB.log'
+make.exe 2>&1 | $msys\bin\tee.exe -a '%home%\DB.log'
 
 REM Boost
-cd /d %home%\Boost
 set PATH=%mingw%
-if not exist done. (
-   bjam\bjam.exe toolset=gcc --build-type=complete stage 2>&1 | %tee% '%home%\Boost.log'
-)
-echo. > done.
+cd /d %home%\Boost
+bjam\bjam.exe toolset=gcc --build-type=complete stage 2>&1 | $msys\bin\tee.exe '%home%\Boost.log'
 
 REM wxWidgets
-cd /d %home%\wxWidgets\build\msw
 set PATH=%mingw%
-if not exist done. (
-   mingw32-make.exe -f makefile.gcc 2>&1 | %tee% '%home%\wxWidgets.log'
-)
-echo. > done.
+cd /d %home%\wxWidgets\build\msw
+mingw32-make.exe -f makefile.gcc 2>&1 | $msys\bin\tee.exe '%home%\wxWidgets.log'
 
 REM bitcoin
-cd /d %home%
 if exist s:\ subst s: /d
 subst s: %home%
+set PATH=%mingw%
 cd /d s:\
 robocopy.exe /s /ndl /njh /njs \OpenSSL\outinc \OpenSSL\include
 robocopy.exe /s /ndl /njh /njs \wxWidgets\lib\gcc_lib\mswd \wxWidgets\lib\vc_lib\mswd
 if not exist \obj mkdir \obj
-set PATH=%mingw%
-if not exist done. (
-   mingw32-make.exe bitcoin.exe -f makefile 2>&1 | %tee% '%home%\bitcoin.log'
-)
+if not exist \obj\nogui mkdir \obj\nogui
+mingw32-make.exe bitcoin.exe bitcoind.exe -f makefile.mingw 2>&1 | c:\msys\1.0\bin\tee.exe '%home%\bitcoin.log'
 subst s: /d
 
 REM Prepare Distribution
@@ -547,34 +557,60 @@ if not exist dist mkdir dist
 strip "bitcoin.exe" -o "dist\bitcoin.exe"
 strip "OpenSSL\libeay32.dll" -o "dist\libeay32.dll"
 strip "$mingw\bin\mingwm10.dll" -o "dist\mingwm10.dll"
-echo. > done.
 
-goto :end
-:error
-  echo ERROR Could not continue
-
-:end
 popd
 set PATH=%oldpath%
 endlocal
 */});
 
-// Kinda sketchy, but "*.patch" files are very sensitive to CR/LF
-var openssl_patch_gz_b64 = heredoc(function () {/*
-H4sICEvkwl8CA29wZW5zc2wtT3BlblNTTF8wXzlfOGgucGF0Y2gApVRtb5swEP5c
-fsVJE9Im5gRI09BomrKXqvvQlynVtI/IwUewakxkQ6Oq6n/fGei6tEm6rUj4zN1z
-L9xztpB5DqwxfA3VCrW1il2SvLo6S8P0OE2KYWZuV3U1RGPcm3KlBtkOLFvxOitQ
-bPXxGGP/kuMgDsOEhWMWJxCG09FkGh0CCydh6AVB8D8VUMQ4ZFHkIkbj6XgyDY8o
-YkIRZzNgx8n7IwhoncBs5sEbqTPVCIQPfaphVtpB8ZEsqIXMPfCCm0oKOJnPU1Vx
-kc6vPqW2NlIv7VtneQd3cO/BJqgrbBPnwcGdS5hrgTlcfj+5cH90cZmSlydeZAj1
-Umq0Q0yX5eplcp7A9/HyBPo6Sp4H28dGMiYeAlqPd7HRNrIj5Jlx0eQ5mh3GrhBn
-DLb0nFjc5mQs7zx68rfk1G2+rUR++/kXPJZ2WNJQrEfxYMHrl9q5id7H4ibydSQ+
-i7WPw8hRGPXnaWawhD4qrGVdwHkXKDi9+AHc9gi2+6HeshUaBV8qnctlYxDaWsCP
-wI/BH4F/CP4Y/CPwJ+AnXrAVXRcGubCgK2ayuBOHnRg7IQVyJwW2mEXu1ozb2kne
-KTNeolKyxVlE0brbzq1wMzDDrKigyt010Y5z2I5z2DfDg9b+uZFKUFFUE4KSC8ON
-ROpE32JW8msElsNj1/mAdB6TOdC1VhmFN6gggmVVV0CT6QXzk3OAneaHxKeo0fD6
-IfXXszMLXAuQetXUf1YilFobviJaaKfpr50R+S3xTwpSV01NLoy0QNvhbyt3LtiW
-/uhB3z2oP72EUmtbZdejmHZLIUex9wuF4A4hkwYAAA==
+var openssl_patch = heredoc(function () {/*
+diff -ura OpenSSL/engines/e_capi.c OpenSSL-0.9.8k/engines/e_capi.c
+--- OpenSSL/engines/e_capi.c	2009-03-25 07:08:15.000000000 -0500
++++ OpenSSL-0.9.8k/engines/e_capi.c	2020-11-20 07:21:42.622899500 -0600
+@@ -56,7 +56,9 @@
+ #include <string.h>
+ #include <openssl/crypto.h>
+ #include <openssl/buffer.h>
++#ifndef OPENSSL_NO_RSA
+ #include <openssl/rsa.h>
++#endif
+ #include <openssl/bn.h>
+ 
+ #ifdef OPENSSL_SYS_WIN32
+diff -ura OpenSSL/engines/e_gmp.c OpenSSL-0.9.8k/engines/e_gmp.c
+--- OpenSSL/engines/e_gmp.c	2009-03-25 07:08:15.000000000 -0500
++++ OpenSSL-0.9.8k/engines/e_gmp.c	2020-11-20 05:55:17.640586500 -0600
+@@ -85,7 +85,9 @@
+ #include <openssl/crypto.h>
+ #include <openssl/buffer.h>
+ #include <openssl/engine.h>
++#ifndef OPENSSL_NO_RSA
+ #include <openssl/rsa.h>
++#endif
+ #include <openssl/bn.h>
+ 
+ #ifndef OPENSSL_NO_HW
+diff -ura OpenSSL/ms/mingw32.bat OpenSSL-0.9.8k/ms/mingw32.bat
+--- OpenSSL/ms/mingw32.bat	2009-03-25 07:08:15.000000000 -0500
++++ OpenSSL-0.9.8k/ms/mingw32.bat	2020-11-20 05:56:15.559249500 -0600
+@@ -1,7 +1,7 @@
+ @rem OpenSSL with Mingw32+GNU as
+ @rem ---------------------------
+ 
+-perl Configure mingw %1 %2 %3 %4 %5 %6 %7 %8
++perl Configure mingw threads no-rc2 no-rc4 no-rc5 no-idea no-des no-bf no-cast no-aes no-camellia no-seed no-rsa no-dh
+ 
+ @echo off
+ 
+@@ -80,7 +80,7 @@
+ 
+ echo Building the libraries
+ mingw32-make -f ms/mingw32a.mak
+-if errorlevel 1 goto end
++REM  if errorlevel 1 goto end
+ 
+ echo Generating the DLLs and input libraries
+ dllwrap --dllname libeay32.dll --output-lib out/libeay32.a --def ms/libeay32.def out/libcrypto.a -lwsock32 -lgdi32
 */});
 
 var closing_msg = heredoc(function () {/*
@@ -608,8 +644,14 @@ function getFile(node) {return node.url.split("/").pop();}
 function sleep(sec) {WScript.Sleep(sec);}
 function chDir(dir) {wso.CurrentDirectory = dir;}
 function isDone(file) {return fso.FileExists(archive+"\\"+file);}
+function error(msg) {print(msg); return false;}
 
 var RUNNING = 0;
+var adTypeBinary = 1;
+var adSaveCreateOverWrite = 2;
+
 var wso = new ActiveXObject("WScript.Shell");
 var fso = new ActiveXObject("Scripting.FileSystemObject")
+var req = new ActiveXObject("WinHttp.WinHttpRequest.5.1");
+var ios = new ActiveXObject("ADODB.Stream");
 main();

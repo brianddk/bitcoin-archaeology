@@ -61,7 +61,7 @@ function main(){
    print("");
    placeFile(buildAll_bat, msys+"\\src\\"+bitcoin+"\\buildAll.bat")
    placeFile(dependencies_json, msys+"\\src\\"+bitcoin+"\\dependencies.json")
-   placeFile(openssl_patch, msys+"\\src\\"+bitcoin+"\\OpenSSL\\OpenSSL.patch")
+   placeFile(openssl_patch_gz_b64, msys+"\\src\\"+bitcoin+"\\OpenSSL\\OpenSSL.patch.gz.b64")
 
    print("\nSuccess!!");
 
@@ -91,7 +91,7 @@ function msiInstall(node){
          if(gco.oExec.ExitCode == 0) {return moveToArch(file);}
       }
    }
-   return error("  Failed to install "+file);
+   return false;
 }
 
 function mingwUnzip(node) {
@@ -111,14 +111,14 @@ function mingwUnzip(node) {
                   fso.DeleteFile(tar);
                }
                else {
-                  return error("  Failed to untar "+file);
+                  return false;
                }
             }
             return moveToArch(file);
          }
       }
    }
-   return error("  Failed to untar "+file);
+   return false;
 }
 
 function msysStaging(node) {
@@ -151,7 +151,7 @@ function perlInstaller(node) {
          return moveToArch(file);
       }
    }
-   return error("  Failed to install "+file);
+   return false;
 }
 
 function tmpSrcMover(node) {
@@ -169,14 +169,15 @@ function tmpSrcMover(node) {
          return moveToArch(file);
       }
    }
-   return error("  Failed to place: "+file);
+   return false;
 }
 
 function unzip(file, dest) {
    cmd = "7z.exe x -r -bd -y -aoa -o"+dest+" "+file;
    gco = getCmdOut(cmd);
    if(gco.oExec.ExitCode){
-      return error("  Failed to untar "+file+"with the message:\n"+gco.error);
+      print(gco.error)
+      return false;
    }
    return true;
 }
@@ -196,8 +197,7 @@ function moveToArch(file) {
    else {
       fso.MoveFile(file, dest);
    }
-   if(fso.FileExists(dest)) {return true;}
-   else {return error("  Failed to move file: "+file);}
+   return true;
 }
 
 function mkDirs(dirs) {
@@ -211,49 +211,11 @@ function mkDirs(dirs) {
 
 function hashCheck(node) {
    var file = getFile(node);
-   if(!fso.FileExists(file)) {
-      if(!downloadFile(node)) {
-         return false;
-      }
+   if(fso.FileExists(file)) {
+      output = getCmdOut("certutil -hashfile "+file).output;
+      var hash = output.split("\n")[1].replace(/\r/g,"").replace(/ /g, "");
    }
-   output = getCmdOut("certutil -hashfile "+file).output;
-   var hash = output.split("\n")[1].replace(/\r/g,"").replace(/ /g, "");
-   if(hash != node.shaHash) {
-      return error("  Failed!! Checksum mismatch on file: "+file);
-   }
-   return true;
-}
-
-function downloadFile(node) {
-   var file = getFile(node);
-   var url = node['altUrl'];
-   var data = null;
-   try
-   {
-      // print("open");
-      var temp = req.Open("GET", url, false);
-      // print("set header");
-      req.SetRequestHeader("User-Agent", "curl/7.55.1");
-      req.SetRequestHeader("Accept", "*/*");
-      print("  Downloading "+file);
-      req.Send();
-      data = req.ResponseBody;
-   }
-   catch (objError)
-   {
-      data = null;
-   }  
-   if(data != null) {
-      ios.Type = adTypeBinary;
-      ios.Open();
-      ios.Write(data);
-      ios.SaveToFile(file, adSaveCreateOverWrite);
-      ios.Close();
-      return true;
-   }
-   else {
-      return error("  Failed!! Could not download "+file);
-   }   
+   return (hash == node.shaHash)
 }
 
 function getCmdOut(cmd) {
@@ -516,38 +478,67 @@ set oldpath=%path%
 set mingw=$mingw\mingw32\bin;$mingw\bin;$perl\bin;%path%
 set msys=$mingw\mingw32\bin;$mingw\bin;$msys\bin;%path%
 set home=$msys\src\$bitcoin
+set tee=$msys\bin\tee.exe
+
+REM Verify patch / diff
+REM The diff and patch utilities "change" over time, and are very picky
+set PATH=%msys%
+diff.exe -v | findstr /r "^diff (GNU diffutils) 2\.8\.7$" || goto :error
+patch.exe --version | findstr /r "^patch 2\.5\.4$" || goto :error
 
 REM OpenSSL
-set PATH=%mingw%
 cd /d %home%\OpenSSL
-if exist OpenSSL.patch $msys\bin\patch.exe -p0 -Nl -r /tmp/OpenSSL -i "%cd%\OpenSSL.patch" -d ..
-call ms\mingw32.bat 2>&1 | $msys\bin\tee.exe '%home%\OpenSSL.log'
+set patchfile=OpenSSL.patch
+set PATH=%msys%
+if not exist done. (
+   if not exist %patchfile% (
+      openssl.exe enc -d -a < %patchfile%.gz.b64 | gzip.exe -dc > %patchfile%
+      patch.exe -p1 -Nul -r /tmp/patch -i %patchfile% 2>&1 | %tee% '%home%\OpenSSL.log'
+   )
+)
+set PATH=%mingw%
+if not exist done. (
+   call ms\mingw32.bat 2>&1 | %tee% -a '%home%\OpenSSL.log'
+)
+echo. > done.
 
 REM Berkeley DB
-set PATH=%msys%
 cd /d %home%\DB\build_unix
-sh.exe --login -c "cd '%cd%';../dist/configure --enable-mingw --enable-cxx" 2>&1 | $msys\bin\tee.exe '%home%\DB.log'
-make.exe 2>&1 | $msys\bin\tee.exe -a '%home%\DB.log'
+set PATH=%msys%
+if not exist done. (
+   sh.exe --login -c "cd '%cd%';../dist/configure --enable-mingw --enable-cxx" 2>&1 | %tee% '%home%\DB.log'
+   make.exe 2>&1 | %tee% -a '%home%\DB.log'
+)
+echo. > done.
 
 REM Boost
-set PATH=%mingw%
 cd /d %home%\Boost
-bjam\bjam.exe toolset=gcc --build-type=complete stage 2>&1 | $msys\bin\tee.exe '%home%\Boost.log'
+set PATH=%mingw%
+if not exist done. (
+   bjam\bjam.exe toolset=gcc --build-type=complete stage 2>&1 | %tee% '%home%\Boost.log'
+)
+echo. > done.
 
 REM wxWidgets
-set PATH=%mingw%
 cd /d %home%\wxWidgets\build\msw
-mingw32-make.exe -f makefile.gcc 2>&1 | $msys\bin\tee.exe '%home%\wxWidgets.log'
+set PATH=%mingw%
+if not exist done. (
+   mingw32-make.exe -f makefile.gcc 2>&1 | %tee% '%home%\wxWidgets.log'
+)
+echo. > done.
 
 REM bitcoin
+cd /d %home%
 if exist s:\ subst s: /d
 subst s: %home%
-set PATH=%mingw%
 cd /d s:\
 robocopy.exe /s /ndl /njh /njs \OpenSSL\outinc \OpenSSL\include
 robocopy.exe /s /ndl /njh /njs \wxWidgets\lib\gcc_lib\mswd \wxWidgets\lib\vc_lib\mswd
 if not exist \obj mkdir \obj
-mingw32-make.exe bitcoin.exe -f makefile 2>&1 | $msys\bin\tee.exe '%home%\bitcoin.log'
+set PATH=%mingw%
+if not exist done. (
+   mingw32-make.exe bitcoin.exe -f makefile 2>&1 | %tee% '%home%\bitcoin.log'
+)
 subst s: /d
 
 REM Prepare Distribution
@@ -556,58 +547,34 @@ if not exist dist mkdir dist
 strip "bitcoin.exe" -o "dist\bitcoin.exe"
 strip "OpenSSL\libeay32.dll" -o "dist\libeay32.dll"
 strip "$mingw\bin\mingwm10.dll" -o "dist\mingwm10.dll"
+echo. > done.
 
+goto :end
+:error
+  echo ERROR Could not continue
+
+:end
 popd
 set PATH=%oldpath%
 endlocal
 */});
 
-var openssl_patch = heredoc(function () {/*
-diff -ura --strip-trailing-cr OpenSSL/crypto/err/err_all.c OpenSSL-0.9.8h/crypto/err/err_all.c
---- OpenSSL/crypto/err/err_all.c	2008-05-28 01:37:14 -0700
-+++ OpenSSL-0.9.8h/crypto/err/err_all.c	2020-11-14 14:37:21 -0800
-@@ -98,6 +98,7 @@
- #include <openssl/cms.h>
- #endif
-
-+void ERR_load_RSA_strings(void) { }
- void ERR_load_crypto_strings(void)
- 	{
- #ifndef OPENSSL_NO_ERR
-diff -ura --strip-trailing-cr OpenSSL/engines/e_gmp.c OpenSSL-0.9.8h/engines/e_gmp.c
---- OpenSSL/engines/e_gmp.c	2008-05-28 01:37:14 -0700
-+++ OpenSSL-0.9.8h/engines/e_gmp.c	2020-11-14 14:35:24 -0800
-@@ -85,7 +85,9 @@
- #include <openssl/crypto.h>
- #include <openssl/buffer.h>
- #include <openssl/engine.h>
-+#ifndef OPENSSL_NO_RSA
- #include <openssl/rsa.h>
-+#endif
- #include <openssl/bn.h>
-
- #ifndef OPENSSL_NO_HW
-diff -ura --strip-trailing-cr OpenSSL/ms/mingw32.bat OpenSSL-0.9.8h/ms/mingw32.bat
---- OpenSSL/ms/mingw32.bat	2008-05-28 01:37:14 -0700
-+++ OpenSSL-0.9.8h/ms/mingw32.bat	2020-11-14 17:15:44 -0800
-@@ -1,7 +1,7 @@
- @rem OpenSSL with Mingw32+GNU as
- @rem ---------------------------
-
--perl Configure mingw %1 %2 %3 %4 %5 %6 %7 %8
-+perl Configure mingw threads no-rc2 no-rc4 no-rc5 no-idea no-des no-bf no-cast no-aes no-camellia no-seed no-rsa no-dh
-
- @echo off
-
-@@ -80,7 +80,7 @@
-
- echo Building the libraries
- mingw32-make -f ms/mingw32a.mak
--if errorlevel 1 goto end
-+REM  if errorlevel 1 goto end
-
- echo Generating the DLLs and input libraries
- dllwrap --dllname libeay32.dll --output-lib out/libeay32.a --def ms/libeay32.def out/libcrypto.a -lwsock32 -lgdi32
+// Kinda sketchy, but "*.patch" files are very sensitive to CR/LF
+var openssl_patch_gz_b64 = heredoc(function () {/*
+H4sICEvkwl8CA29wZW5zc2wtT3BlblNTTF8wXzlfOGgucGF0Y2gApVRtb5swEP5c
+fsVJE9Im5gRI09BomrKXqvvQlynVtI/IwUewakxkQ6Oq6n/fGei6tEm6rUj4zN1z
+L9xztpB5DqwxfA3VCrW1il2SvLo6S8P0OE2KYWZuV3U1RGPcm3KlBtkOLFvxOitQ
+bPXxGGP/kuMgDsOEhWMWJxCG09FkGh0CCydh6AVB8D8VUMQ4ZFHkIkbj6XgyDY8o
+YkIRZzNgx8n7IwhoncBs5sEbqTPVCIQPfaphVtpB8ZEsqIXMPfCCm0oKOJnPU1Vx
+kc6vPqW2NlIv7VtneQd3cO/BJqgrbBPnwcGdS5hrgTlcfj+5cH90cZmSlydeZAj1
+Umq0Q0yX5eplcp7A9/HyBPo6Sp4H28dGMiYeAlqPd7HRNrIj5Jlx0eQ5mh3GrhBn
+DLb0nFjc5mQs7zx68rfk1G2+rUR++/kXPJZ2WNJQrEfxYMHrl9q5id7H4ibydSQ+
+i7WPw8hRGPXnaWawhD4qrGVdwHkXKDi9+AHc9gi2+6HeshUaBV8qnctlYxDaWsCP
+wI/BH4F/CP4Y/CPwJ+AnXrAVXRcGubCgK2ayuBOHnRg7IQVyJwW2mEXu1ozb2kne
+KTNeolKyxVlE0brbzq1wMzDDrKigyt010Y5z2I5z2DfDg9b+uZFKUFFUE4KSC8ON
+ROpE32JW8msElsNj1/mAdB6TOdC1VhmFN6gggmVVV0CT6QXzk3OAneaHxKeo0fD6
+IfXXszMLXAuQetXUf1YilFobviJaaKfpr50R+S3xTwpSV01NLoy0QNvhbyt3LtiW
+/uhB3z2oP72EUmtbZdejmHZLIUex9wuF4A4hkwYAAA==
 */});
 
 var closing_msg = heredoc(function () {/*
@@ -641,14 +608,8 @@ function getFile(node) {return node.url.split("/").pop();}
 function sleep(sec) {WScript.Sleep(sec);}
 function chDir(dir) {wso.CurrentDirectory = dir;}
 function isDone(file) {return fso.FileExists(archive+"\\"+file);}
-function error(msg) {print(msg); return false;}
 
 var RUNNING = 0;
-var adTypeBinary = 1;
-var adSaveCreateOverWrite = 2;
-
 var wso = new ActiveXObject("WScript.Shell");
 var fso = new ActiveXObject("Scripting.FileSystemObject")
-var req = new ActiveXObject("WinHttp.WinHttpRequest.5.1");
-var ios = new ActiveXObject("ADODB.Stream");
 main();
